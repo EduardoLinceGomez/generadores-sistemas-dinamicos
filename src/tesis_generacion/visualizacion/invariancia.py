@@ -220,14 +220,14 @@ def regenerar_invariancia(directorio: Path) -> Dict[str, object]:
         directorio / "LogConv_Iteraciones.png",
         logistica,
         cdf_beta_medio,
-        "Evolución del ensamble: mapa logístico r=4 (N=1000)",
+        "Evolución de distribuciones: mapeo logístico",
         "Beta(1/2,1/2) teórica",
     )
     guardar_evolucion_cdf(
         directorio / "TentConv_Iteraciones.png",
         tienda,
         cdf_uniforme_01,
-        "Evolución del ensamble: mapa tienda ideal μ=2 (N=1000)",
+        "Evolución de distribuciones: mapeo tienda",
         "Uniforme(0,1) teórica",
     )
     shutil.copyfile(

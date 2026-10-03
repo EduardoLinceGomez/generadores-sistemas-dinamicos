@@ -136,16 +136,16 @@ def guardar_brechas_antes_despues(
         figsize=FIGSIZE_BRECHAS,
     )
     figura.subplots_adjust(
-        left=0.125,
+        left=0.19,
         right=0.985,
-        bottom=0.09,
-        top=0.84,
+        bottom=0.13,
+        top=0.73,
         hspace=0.52,
     )
     figura.suptitle(
-        f"Prueba de brechas: {titulo}",
+        f"Prueba de brechas:\n{titulo}",
         y=0.985,
-        fontsize=perfil.titulo,
+        fontsize=perfil.ejes,
     )
     for eje, (intervalo_id, (alpha, beta)) in zip(ejes, intervalos.items()):
         tiempos_original, _ = tiempos_espera_brechas(original, alpha, beta)
@@ -198,8 +198,8 @@ def guardar_brechas_antes_despues(
         manejadores,
         etiquetas,
         loc="upper center",
-        bbox_to_anchor=(0.5, 0.925),
-        ncol=3,
+        bbox_to_anchor=(0.56, 0.875),
+        ncol=2,
         fontsize=perfil.leyenda,
         columnspacing=1.1,
         handletextpad=0.55,

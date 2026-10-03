@@ -22,6 +22,9 @@ class PerfilTipografico:
 
 # Figuras que terminan a aproximadamente media página.
 PERFIL_MEDIO = PerfilTipografico(22, 19, 16, 14, 14, -0.24)
+# Perfiles de la segunda ronda: compensan la reducción a media página.
+PERFIL_RESULTADOS = PerfilTipografico(24, 23, 19, 18, 18, -0.27)
+PERFIL_BRECHAS = PerfilTipografico(27, 27, 22, 20, 22, -0.24)
 # Figuras que se insertan al 80 % del ancho del texto.
 PERFIL_ANCHO = PerfilTipografico(18, 16, 13, 12, 12, -0.20)
 # Los dos histogramas de la Figura 2.13 se muestran lado a lado y requieren
@@ -51,7 +54,7 @@ def leyenda_externa(
     manejadores, etiquetas = eje.get_legend_handles_labels()
     if not manejadores:
         return None
-    return eje.legend(
+    leyenda = eje.legend(
         manejadores,
         etiquetas,
         loc="upper center",
@@ -63,6 +66,7 @@ def leyenda_externa(
         handletextpad=0.55,
         labelspacing=0.45,
     )
+    return leyenda
 
 
 def guardar_figura(
@@ -74,10 +78,35 @@ def guardar_figura(
 ) -> None:
     """Guarda sin recortes y con un padding compacto y reproducible."""
 
+    # Resolver el layout antes de medir; las leyendas externas no reducen
+    # el área de datos. Su borde superior queda debajo del xlabel y los ticks.
+    for eje in figura.axes:
+        if eje.get_legend() is not None:
+            eje.get_legend().set_in_layout(False)
+    figura.canvas.draw()
+    renderer = figura.canvas.get_renderer()
+    extras = list(figura.texts) + list(figura.legends)
+    for eje in figura.axes:
+        extras.extend([eje.xaxis.label, eje.yaxis.label, eje.title])
+        leyenda = eje.get_legend()
+        if leyenda is not None:
+            cajas = [texto.get_window_extent(renderer) for texto in
+                     [eje.xaxis.label, *eje.get_xticklabels()]
+                     if texto.get_visible() and texto.get_text()]
+            inferior = min(caja.y0 for caja in cajas)
+            centro = (eje.bbox.x0 + eje.bbox.x1) / 2
+            punto = figura.transFigure.inverted().transform(
+                (centro, inferior - 10 * figura.dpi / 72)
+            )
+            leyenda.set_bbox_to_anchor(punto, transform=figura.transFigure)
+            extras.append(leyenda)
+    # Evitar que savefig vuelva a redistribuir ejes tras medir los artistas.
+    figura.set_layout_engine(None)
     figura.savefig(
         ruta,
         dpi=dpi,
         bbox_inches="tight",
+        bbox_extra_artists=extras,
         pad_inches=0.08,
         metadata={"Software": software},
     )
