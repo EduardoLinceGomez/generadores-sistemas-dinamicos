@@ -21,6 +21,7 @@ from tesis_generacion.experimentos import (
     construir_muestras,
 )
 from tesis_generacion.visualizacion.estilo import (
+    PERFIL_RESULTADOS,
     estilizar_eje,
     guardar_figura,
     leyenda_externa,
@@ -91,8 +92,8 @@ def guardar_cdf(
         ylim=(-0.02, 1.02),
     )
     eje.grid(alpha=0.25)
-    estilizar_eje(eje)
-    leyenda_externa(eje, ncol=2)
+    estilizar_eje(eje, PERFIL_RESULTADOS)
+    leyenda_externa(eje, PERFIL_RESULTADOS, ncol=2)
     guardar_figura(figura, ruta, software="regenerar_coleccionista.py")
     plt.close(figura)
 
@@ -132,8 +133,8 @@ def guardar_pmf(
     )
     eje.set_ylim(bottom=0)
     eje.grid(axis="y", alpha=0.25)
-    estilizar_eje(eje)
-    leyenda_externa(eje, ncol=2)
+    estilizar_eje(eje, PERFIL_RESULTADOS)
+    leyenda_externa(eje, PERFIL_RESULTADOS, ncol=2)
     guardar_figura(figura, ruta, software="regenerar_coleccionista.py")
     plt.close(figura)
 

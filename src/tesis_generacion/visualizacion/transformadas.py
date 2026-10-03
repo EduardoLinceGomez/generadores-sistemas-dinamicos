@@ -22,6 +22,7 @@ from tesis_generacion.estadistica.transformadas import (
 from tesis_generacion.experimentos import NUM_ITERACIONES, construir_muestras
 from tesis_generacion.generadores import orbita_logistica
 from tesis_generacion.visualizacion.estilo import (
+    PERFIL_RESULTADOS,
     estilizar_eje,
     guardar_figura,
     leyenda_externa,
@@ -116,6 +117,7 @@ def guardar_fgm(
     ruta: Path,
     series: Mapping[str, np.ndarray],
     titulo: str,
+    *, perfil=PERFIL_RESULTADOS,
 ) -> None:
     """Compara la FGM empírica con la FGM de Uniforme(0,1)."""
 
@@ -138,14 +140,14 @@ def guardar_fgm(
             label=etiqueta,
         )
     eje.set(
-        title=titulo,
+        title=titulo.replace(": ", ":\n"),
         xlabel="t",
-        ylabel=r"Función generadora de momentos $M(t)$",
+        ylabel="Función generadora de momentos $M(t)$",
         yscale="log",
     )
     eje.grid(alpha=0.25, which="both")
-    estilizar_eje(eje)
-    leyenda_externa(eje, ncol=2)
+    estilizar_eje(eje, perfil)
+    leyenda_externa(eje, perfil, ncol=1 if len(series) == 1 else 2)
     _guardar_figura(figura, ruta)
 
 
@@ -153,6 +155,7 @@ def guardar_error_fgm(
     ruta: Path,
     series: Mapping[str, np.ndarray],
     titulo: str,
+    *, perfil=PERFIL_RESULTADOS,
 ) -> None:
     """Grafica |M_n(t)-M_U(t)| en la malla común."""
 
@@ -170,14 +173,14 @@ def guardar_error_fgm(
             label=etiqueta,
         )
     eje.set(
-        title=titulo,
+        title=titulo.replace(": ", ":\n"),
         xlabel="t",
         ylabel=r"Error absoluto $|M_n(t)-M_U(t)|$",
         yscale="symlog",
     )
     eje.grid(alpha=0.25, which="both")
-    estilizar_eje(eje)
-    leyenda_externa(eje, ncol=2)
+    estilizar_eje(eje, perfil)
+    leyenda_externa(eje, perfil, ncol=1 if len(series) == 1 else 2)
     _guardar_figura(figura, ruta)
 
 
@@ -186,6 +189,7 @@ def guardar_funcion_caracteristica(
     series: Mapping[str, np.ndarray],
     titulo: str,
     *,
+    perfil=PERFIL_RESULTADOS,
     figsize: tuple[float, float] = (6.4, 5.2),
 ) -> None:
     """Grafica la trayectoria compleja de phi(t), 0 <= t <= 20."""
@@ -214,14 +218,14 @@ def guardar_funcion_caracteristica(
         )
     eje.scatter([1.0], [0.0], color="tab:red", s=28, zorder=5, label=r"$t=0$")
     eje.set(
-        title=titulo,
+        title=titulo.replace(": ", ":\n"),
         xlabel=r"Parte real de $\varphi(t)$",
         ylabel=r"Parte imaginaria de $\varphi(t)$",
         aspect="equal",
     )
     eje.grid(alpha=0.25)
-    estilizar_eje(eje)
-    leyenda_externa(eje, ncol=2)
+    estilizar_eje(eje, perfil)
+    leyenda_externa(eje, perfil, ncol=1 if len(series) == 1 else 2)
     _guardar_figura(figura, ruta)
 
 
@@ -230,6 +234,7 @@ def guardar_error_funcion_caracteristica(
     series: Mapping[str, np.ndarray],
     titulo: str,
     *,
+    perfil=PERFIL_RESULTADOS,
     figsize: tuple[float, float] = (7.2, 4.5),
 ) -> None:
     """Grafica |phi_n(t)-phi_U(t)| en la malla común."""
@@ -250,14 +255,14 @@ def guardar_error_funcion_caracteristica(
             label=etiqueta,
         )
     eje.set(
-        title=titulo,
+        title=titulo.replace(": ", ":\n"),
         xlabel="t",
         ylabel=r"Error absoluto $|\varphi_n(t)-\varphi_U(t)|$",
     )
     eje.set_ylim(bottom=0.0)
     eje.grid(alpha=0.25)
-    estilizar_eje(eje)
-    leyenda_externa(eje, ncol=2)
+    estilizar_eje(eje, perfil)
+    leyenda_externa(eje, perfil, ncol=1 if len(series) == 1 else 2)
     _guardar_figura(figura, ruta)
 
 

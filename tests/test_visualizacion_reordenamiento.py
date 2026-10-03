@@ -58,7 +58,7 @@ class RegeneracionReordenamientoTest(unittest.TestCase):
         figura = capturadas[0]
         try:
             self.assertEqual(tuple(figura.get_size_inches()), FIGSIZE_BRECHAS)
-            self.assertEqual(figura._suptitle.get_fontsize(), PERFIL_MEDIO.titulo)
+            self.assertEqual(figura._suptitle.get_fontsize(), PERFIL_MEDIO.ejes)
             self.assertEqual(figura._supxlabel.get_fontsize(), PERFIL_MEDIO.ejes)
             self.assertEqual(figura._supylabel.get_fontsize(), PERFIL_MEDIO.ejes)
             self.assertEqual(len(figura.legends), 1)

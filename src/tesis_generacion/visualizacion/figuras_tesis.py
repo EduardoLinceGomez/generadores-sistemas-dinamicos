@@ -25,6 +25,7 @@ from tesis_generacion.generadores.regla30 import (
     paso_regla30,
 )
 from tesis_generacion.visualizacion.estilo import (
+    guardar_figura,
     estilizar_eje,
     leyenda_externa,
 )
@@ -485,7 +486,7 @@ def _bifurcacion_tienda(ruta: Path) -> None:
     _guardar(figura, ruta)
 
 
-def _figura_histograma(ruta: Path, valores: np.ndarray, titulo: str) -> None:
+def _figura_histograma(ruta: Path, valores: np.ndarray, titulo: str, *, perfil=None) -> None:
     bordes = np.linspace(0.0, 1.0, 11)
     conteos, _ = np.histogram(valores, bins=bordes)
     anchos = np.diff(bordes)
@@ -503,9 +504,17 @@ def _figura_histograma(ruta: Path, valores: np.ndarray, titulo: str) -> None:
     )
     eje.axhline(1.0, color=COLOR_ACENTO, ls="--", lw=1.4, label="Uniforme(0,1)")
     eje.set(xlim=(0.0, 1.0), xlabel="Valor", ylabel="Densidad empírica", title=titulo)
-    estilizar_eje(eje)
-    leyenda_externa(eje, ncol=2)
-    _guardar(figura, ruta)
+    if perfil is None:
+        estilizar_eje(eje)
+        leyenda_externa(eje, ncol=2)
+    else:
+        estilizar_eje(eje, perfil)
+        leyenda_externa(eje, perfil, ncol=1)
+    if perfil is None:
+        _guardar(figura, ruta)
+    else:
+        guardar_figura(figura, ruta, software="regenerar_segunda_ronda.py")
+        plt.close(figura)
 
 
 def _figura_coleccionista(ruta: Path) -> None:

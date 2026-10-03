@@ -25,6 +25,7 @@ from tesis_generacion.experimentos import (
 )
 from tesis_generacion.generadores import orbita_logistica
 from tesis_generacion.visualizacion.estilo import (
+    PERFIL_RESULTADOS,
     PERFIL_HISTOGRAMA_DOBLE,
     estilizar_eje,
     guardar_figura,
@@ -217,6 +218,7 @@ def guardar_comparacion_momentos(
     series: Mapping[str, np.ndarray],
     orden_maximo: int,
     titulo: str,
+    *, perfil=PERFIL_RESULTADOS,
 ) -> None:
     """Guarda momentos ordinarios empíricos y teóricos en un mismo eje."""
 
@@ -240,10 +242,10 @@ def guardar_comparacion_momentos(
             markersize=5,
             label=etiqueta,
         )
-    eje.set(title=titulo, xlabel="Orden k", ylabel="Momento ordinario m_k")
+    eje.set(title=titulo.replace(": ", ":\n"), xlabel=r"Orden $k$", ylabel=r"Momento ordinario $m_k$")
     eje.grid(alpha=0.25)
-    estilizar_eje(eje)
-    leyenda_externa(eje, ncol=2)
+    estilizar_eje(eje, perfil)
+    leyenda_externa(eje, perfil, ncol=1 if len(series) == 1 else 2)
     _guardar_figura(figura, ruta)
 
 
@@ -252,6 +254,7 @@ def guardar_error_momentos(
     series: Mapping[str, np.ndarray],
     orden_maximo: int,
     titulo: str,
+    *, perfil=PERFIL_RESULTADOS,
 ) -> None:
     """Guarda errores absolutos respecto de Uniforme(0,1)."""
 
@@ -269,14 +272,14 @@ def guardar_error_momentos(
             label=etiqueta,
         )
     eje.set(
-        title=titulo,
-        xlabel="Orden k",
+        title=titulo.replace(": ", ":\n"),
+        xlabel=r"Orden $k$",
         ylabel="Error absoluto del momento",
     )
     eje.set_ylim(bottom=0.0)
     eje.grid(alpha=0.25)
-    estilizar_eje(eje)
-    leyenda_externa(eje, ncol=2)
+    estilizar_eje(eje, perfil)
+    leyenda_externa(eje, perfil, ncol=1 if len(series) == 1 else 2)
     _guardar_figura(figura, ruta)
 
 
