@@ -4,7 +4,7 @@ import csv
 import hashlib
 from pathlib import Path
 import shutil
-from typing import Dict, Mapping
+from typing import Dict, Mapping, Optional
 
 import matplotlib
 
@@ -25,6 +25,7 @@ from tesis_generacion.visualizacion.estilo import (
     PERFIL_RESULTADOS,
     estilizar_eje,
     guardar_figura,
+    guardar_paneles_alineados,
     leyenda_externa,
 )
 
@@ -114,11 +115,11 @@ def _resumen_transformadas(valores: np.ndarray) -> Dict[str, object]:
 
 
 def guardar_fgm(
-    ruta: Path,
+    ruta: Optional[Path],
     series: Mapping[str, np.ndarray],
     titulo: str,
     *, perfil=PERFIL_RESULTADOS,
-) -> None:
+) -> plt.Figure:
     """Compara la FGM empírica con la FGM de Uniforme(0,1)."""
 
     figura, eje = plt.subplots(figsize=(7.2, 4.5), constrained_layout=True)
@@ -148,15 +149,17 @@ def guardar_fgm(
     eje.grid(alpha=0.25, which="both")
     estilizar_eje(eje, perfil)
     leyenda_externa(eje, perfil, ncol=1 if len(series) == 1 else 2)
-    _guardar_figura(figura, ruta)
+    if ruta is not None:
+        _guardar_figura(figura, ruta)
+    return figura
 
 
 def guardar_error_fgm(
-    ruta: Path,
+    ruta: Optional[Path],
     series: Mapping[str, np.ndarray],
     titulo: str,
     *, perfil=PERFIL_RESULTADOS,
-) -> None:
+) -> plt.Figure:
     """Grafica |M_n(t)-M_U(t)| en la malla común."""
 
     teorica = np.asarray(fgm_uniforme(T_FGM), dtype=float)
@@ -181,17 +184,19 @@ def guardar_error_fgm(
     eje.grid(alpha=0.25, which="both")
     estilizar_eje(eje, perfil)
     leyenda_externa(eje, perfil, ncol=1 if len(series) == 1 else 2)
-    _guardar_figura(figura, ruta)
+    if ruta is not None:
+        _guardar_figura(figura, ruta)
+    return figura
 
 
 def guardar_funcion_caracteristica(
-    ruta: Path,
+    ruta: Optional[Path],
     series: Mapping[str, np.ndarray],
     titulo: str,
     *,
     perfil=PERFIL_RESULTADOS,
     figsize: tuple[float, float] = (6.4, 5.2),
-) -> None:
+) -> plt.Figure:
     """Grafica la trayectoria compleja de phi(t), 0 <= t <= 20."""
 
     teorica = np.asarray(funcion_caracteristica_uniforme(T_FC), dtype=complex)
@@ -226,17 +231,19 @@ def guardar_funcion_caracteristica(
     eje.grid(alpha=0.25)
     estilizar_eje(eje, perfil)
     leyenda_externa(eje, perfil, ncol=1 if len(series) == 1 else 2)
-    _guardar_figura(figura, ruta)
+    if ruta is not None:
+        _guardar_figura(figura, ruta)
+    return figura
 
 
 def guardar_error_funcion_caracteristica(
-    ruta: Path,
+    ruta: Optional[Path],
     series: Mapping[str, np.ndarray],
     titulo: str,
     *,
     perfil=PERFIL_RESULTADOS,
     figsize: tuple[float, float] = (7.2, 4.5),
-) -> None:
+) -> plt.Figure:
     """Grafica |phi_n(t)-phi_U(t)| en la malla común."""
 
     teorica = np.asarray(funcion_caracteristica_uniforme(T_FC), dtype=complex)
@@ -263,7 +270,9 @@ def guardar_error_funcion_caracteristica(
     eje.grid(alpha=0.25)
     estilizar_eje(eje, perfil)
     leyenda_externa(eje, perfil, ncol=1 if len(series) == 1 else 2)
-    _guardar_figura(figura, ruta)
+    if ruta is not None:
+        _guardar_figura(figura, ruta)
+    return figura
 
 
 def guardar_resumen_csv(
@@ -354,28 +363,16 @@ def regenerar_transformadas(output_dir: Path) -> Dict[str, object]:
             if nombre in {"logistico", "tienda"}
             else (7.2, 4.5)
         )
-        guardar_fgm(
-            output_dir / f"{nombre}_fgm.png",
-            series,
-            f"FGM empírica: {titulo}",
-        )
-        guardar_error_fgm(
-            output_dir / f"{nombre}_error_fgm.png",
-            series,
-            f"Error de la FGM: {titulo}",
-        )
-        guardar_funcion_caracteristica(
-            output_dir / f"{nombre}_fc.png",
-            series,
-            titulo_fc,
-            figsize=figsize_fc,
-        )
-        guardar_error_funcion_caracteristica(
-            output_dir / f"{nombre}_error_fc.png",
-            series,
-            titulo_error_fc,
-            figsize=figsize_error_fc,
-        )
+        guardar_fgm_pareadas(output_dir, nombre, series, titulo)
+        if nombre == "r30":
+            guardar_fc_pareadas(output_dir, nombre, series, titulo_fc, titulo_error_fc)
+        else:
+            guardar_funcion_caracteristica(
+                output_dir / f"{nombre}_fc.png", series, titulo_fc, figsize=figsize_fc,
+            )
+            guardar_error_funcion_caracteristica(
+                output_dir / f"{nombre}_error_fc.png", series, titulo_error_fc, figsize=figsize_error_fc,
+            )
 
     diagnostico = {
         "Órbita cruda histórica": cruda,
@@ -440,3 +437,38 @@ def copiar_referencias_transformadas(
         if not origen.is_file():
             raise FileNotFoundError(f"no se generó la referencia: {origen}")
         shutil.copyfile(origen, reference_dir / nombre)
+
+
+def guardar_fgm_pareadas(
+    output_dir: Path, nombre: str, series: Mapping[str, np.ndarray], titulo: str,
+) -> None:
+    """Guarda la FGM y su error con igual altura efectiva de trazado."""
+    figuras = (
+        guardar_fgm(None, series, f"FGM empírica: {titulo}"),
+        guardar_error_fgm(None, series, f"Error de la FGM: {titulo}"),
+    )
+    try:
+        guardar_paneles_alineados(figuras,
+            (output_dir / f"{nombre}_fgm.png", output_dir / f"{nombre}_error_fgm.png"),
+            software="regenerar_transformadas.py")
+    finally:
+        for figura in figuras:
+            plt.close(figura)
+
+
+def guardar_fc_pareadas(
+    output_dir: Path, nombre: str, series: Mapping[str, np.ndarray],
+    titulo_fc: str, titulo_error: str,
+) -> None:
+    """Alinea trayectoria compleja y error conservando aspect='equal'."""
+    figuras = (
+        guardar_funcion_caracteristica(None, series, titulo_fc),
+        guardar_error_funcion_caracteristica(None, series, titulo_error),
+    )
+    try:
+        guardar_paneles_alineados(figuras,
+            (output_dir / f"{nombre}_fc.png", output_dir / f"{nombre}_error_fc.png"),
+            software="regenerar_transformadas.py")
+    finally:
+        for figura in figuras:
+            plt.close(figura)

@@ -4,7 +4,7 @@ import csv
 import hashlib
 from pathlib import Path
 import shutil
-from typing import Dict, Mapping, Sequence, Tuple
+from typing import Dict, Mapping, Optional, Sequence, Tuple
 
 import matplotlib
 
@@ -29,6 +29,7 @@ from tesis_generacion.visualizacion.estilo import (
     PERFIL_HISTOGRAMA_DOBLE,
     estilizar_eje,
     guardar_figura,
+    guardar_paneles_alineados,
     leyenda_externa,
 )
 
@@ -214,12 +215,12 @@ def guardar_diagnostico_histograma_logistico(
 
 
 def guardar_comparacion_momentos(
-    ruta: Path,
+    ruta: Optional[Path],
     series: Mapping[str, np.ndarray],
     orden_maximo: int,
     titulo: str,
     *, perfil=PERFIL_RESULTADOS,
-) -> None:
+) -> plt.Figure:
     """Guarda momentos ordinarios empíricos y teóricos en un mismo eje."""
 
     ordenes = np.arange(1, orden_maximo + 1)
@@ -246,16 +247,18 @@ def guardar_comparacion_momentos(
     eje.grid(alpha=0.25)
     estilizar_eje(eje, perfil)
     leyenda_externa(eje, perfil, ncol=1 if len(series) == 1 else 2)
-    _guardar_figura(figura, ruta)
+    if ruta is not None:
+        _guardar_figura(figura, ruta)
+    return figura
 
 
 def guardar_error_momentos(
-    ruta: Path,
+    ruta: Optional[Path],
     series: Mapping[str, np.ndarray],
     orden_maximo: int,
     titulo: str,
     *, perfil=PERFIL_RESULTADOS,
-) -> None:
+) -> plt.Figure:
     """Guarda errores absolutos respecto de Uniforme(0,1)."""
 
     ordenes = np.arange(1, orden_maximo + 1)
@@ -280,7 +283,9 @@ def guardar_error_momentos(
     eje.grid(alpha=0.25)
     estilizar_eje(eje, perfil)
     leyenda_externa(eje, perfil, ncol=1 if len(series) == 1 else 2)
-    _guardar_figura(figura, ruta)
+    if ruta is not None:
+        _guardar_figura(figura, ruta)
+    return figura
 
 
 def _fingerprint(valores: np.ndarray) -> Dict[str, object]:
@@ -415,18 +420,7 @@ def regenerar_momentos(output_dir: Path) -> Dict[str, object]:
         ),
     )
     for nombre, titulo, series, orden_maximo in configuraciones:
-        guardar_comparacion_momentos(
-            output_dir / f"{nombre}_momentos.png",
-            series,
-            orden_maximo,
-            f"Momentos ordinarios: {titulo}",
-        )
-        guardar_error_momentos(
-            output_dir / f"{nombre}_error_momentos.png",
-            series,
-            orden_maximo,
-            f"Error de momentos: {titulo}",
-        )
+        guardar_momentos_pareados(output_dir, nombre, series, orden_maximo, titulo)
 
     resumenes = {"uniforme_teorica": resumen_uniforme_teorica(4)}
     for nombre, valores in muestras.items():
@@ -476,3 +470,21 @@ def copiar_referencias(output_dir: Path, reference_dir: Path) -> None:
         if not origen.is_file():
             raise FileNotFoundError(f"no se generó la referencia: {origen}")
         shutil.copyfile(origen, reference_dir / nombre)
+
+
+def guardar_momentos_pareados(
+    output_dir: Path, nombre: str, series: Mapping[str, np.ndarray],
+    orden_maximo: int, titulo: str,
+) -> None:
+    """Guarda comparación y error con los bordes de datos alineados."""
+    figuras = (
+        guardar_comparacion_momentos(None, series, orden_maximo, f"Momentos ordinarios: {titulo}"),
+        guardar_error_momentos(None, series, orden_maximo, f"Error de momentos: {titulo}"),
+    )
+    try:
+        guardar_paneles_alineados(figuras,
+            (output_dir / f"{nombre}_momentos.png", output_dir / f"{nombre}_error_momentos.png"),
+            software="regenerar_momentos.py")
+    finally:
+        for figura in figuras:
+            plt.close(figura)
